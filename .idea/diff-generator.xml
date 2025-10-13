@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DiffGenerationConfig">
+    <option name="sourceModelValue" value="scouting-app.core.main:scouting-app.core.main" />
+    <option name="targetDbValue" value="c546b8e8-0414-4512-a78a-e8cb933b7533__postgres_public" />
+  </component>
+</project>
