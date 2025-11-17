@@ -12,7 +12,10 @@ data class ServiceResponse<T>(
     val message: String? = null,
     val data: T? = null,
     val error: ServiceError? = null
-)
+) {
+    constructor(status: ResponseStatus, data: T) : this(status, null, data, null)
+    constructor(status: ResponseStatus, error: ServiceError) : this(status, null, null, error)
+}
 
 fun ResponseStatus.toJaxRs(): Response.Status = when (this) {
     ResponseStatus.SUCCESS -> Response.Status.OK
