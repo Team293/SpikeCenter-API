@@ -10,7 +10,6 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":core"))
     implementation(project(":api"))
-    implementation(project(":integration"))
     implementation(project(":analytics"))
 
     implementation("io.quarkus:quarkus-kotlin")
@@ -36,4 +35,5 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-validator")
     implementation("io.quarkus:quarkus-oidc")
     implementation("io.quarkus:quarkus-keycloak-authorization")
+    implementation("io.quarkus:quarkus-keycloak-admin-resteasy-client")
 }

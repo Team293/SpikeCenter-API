@@ -9,9 +9,13 @@ dependencies {
     implementation(project(":common"))
 
     compileOnly("io.quarkus:quarkus-hibernate-orm-panache-kotlin")
+    implementation("io.quarkus:quarkus-keycloak-admin-resteasy-client")
+
     compileOnly("jakarta.persistence:jakarta.persistence-api:3.1.0")
     compileOnly("jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("ai.timefold.solver:timefold-solver-core:1.26.2")
+    implementation("ai.timefold.solver:timefold-solver-quarkus:1.26.2")
 }
 
 allOpen {

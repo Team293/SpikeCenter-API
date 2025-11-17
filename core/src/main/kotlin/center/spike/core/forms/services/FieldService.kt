@@ -18,7 +18,7 @@ import jakarta.transaction.Transactional
 class FieldService {
 
     @Inject
-    lateinit var formVersionRepository: FormVersionRepository
+    internal lateinit var formVersionRepository: FormVersionRepository
 
     /**
      * Given a list of [FieldAnswer]s, return the corresponding list of [FieldDefinition]s.

@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "spikecenter-api"
-include(":common", ":core", ":api", ":integration", ":analytics", ":backend")
+include(":common", ":core", ":api", ":analytics", ":backend")

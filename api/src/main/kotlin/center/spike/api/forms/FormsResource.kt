@@ -1,25 +1,24 @@
 package center.spike.api.forms
 
-import center.spike.common.ResponseStatus
-import center.spike.common.ServiceResponse
 import center.spike.common.forms.CreateFormRequest
 import center.spike.common.forms.CreateVersionRequest
 import center.spike.common.forms.FormIdTransit
-import center.spike.common.forms.FormType
+import center.spike.common.forms.ScoutingType
 import center.spike.common.forms.GetFormByTypeRequest
+import center.spike.common.forms.GetFormResponsesWithEventCodeRequest
+import center.spike.common.forms.GetFormResponsesWithTeamNumberRequest
 import center.spike.common.forms.GetVersionRequest
+import center.spike.common.forms.SetVersionRequest
 import center.spike.common.forms.SubmitFormRequest
 import center.spike.common.toResponse
 import center.spike.core.forms.services.FormService
-import center.spike.core.forms.persistence.FormDefinition
-import center.spike.core.forms.persistence.FormVersion
-import io.quarkus.security.Authenticated
-import jakarta.annotation.security.RolesAllowed
 import jakarta.inject.Inject
+import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.Response
+import org.eclipse.microprofile.openapi.annotations.Operation
 
 //@Authenticated
 @Path("/forms")
@@ -50,7 +49,7 @@ class FormsResource {
 
     @GET
     @Path("/type/{type}")
-    fun getFormByType(type: FormType): Response {
+    fun getFormByType(type: ScoutingType): Response {
         val request = GetFormByTypeRequest(type)
         return formService.getFormByType(request).toResponse()
     }
@@ -67,6 +66,23 @@ class FormsResource {
     fun getLatestVersion(formId: Long): Response {
         val request = FormIdTransit(formId)
         return formService.getLatestVersion(request).toResponse()
+    }
+
+    @POST
+    @Path("/version")
+    @Operation(
+        summary = "Set form version",
+        description = "Set the active version of a form"
+    )
+    fun getVersion(request: SetVersionRequest): Response {
+        return formService.setVersion(request).toResponse()
+    }
+
+    @GET
+    @Path("/version/{formId}/current")
+    fun getCurrentVersion(formId: Long): Response {
+        val request = FormIdTransit(formId)
+        return formService.getCurrentVersion(request).toResponse()
     }
 
     @GET
@@ -89,4 +105,24 @@ class FormsResource {
         return formService.getFormResponses(request).toResponse()
     }
 
+    @GET
+    @Path("/responses/{formId}/event/{eventCode}")
+    fun getFormResponsesByEvent(formId: Long, eventCode: String): Response {
+        val request = GetFormResponsesWithEventCodeRequest(formId, eventCode)
+        return formService.getFormResponsesByEvent(request).toResponse()
+    }
+
+    @GET
+    @Path("/responses/{formId}/team/{teamNumber}")
+    fun getFormResponsesByTeam(formId: Long, teamNumber: Long): Response {
+        val request = GetFormResponsesWithTeamNumberRequest(formId, teamNumber)
+        return formService.getFormResponsesByTeam(request).toResponse()
+    }
+
+    @DELETE
+    @Path("/{formId}")
+    fun deleteForm(formId: Long): Response {
+        val request = FormIdTransit(formId)
+        return formService.deleteForm(request).toResponse()
+    }
 }

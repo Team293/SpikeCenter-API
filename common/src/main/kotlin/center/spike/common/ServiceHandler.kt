@@ -1,8 +1,10 @@
 package center.spike.common
 
-import jakarta.ws.rs.core.GenericEntity
+import kotlinx.serialization.serializer
+import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 @Serializable
 data class ServiceResponse<T>(
@@ -23,10 +25,12 @@ inline fun <reified T> ServiceResponse<T>.toResponse(
     statusOverride: Response.StatusType? = null
 ): Response {
     val status = statusOverride ?: this.status.toJaxRs()
-    val entity = object : GenericEntity<ServiceResponse<T>>(this) {}
+    val json = Json.encodeToString(serializer(), this) // uses reified serializer for ServiceResponse<T>
     return Response.status(status.statusCode)
-        .entity(entity)
+        .entity(json)
+        .type(MediaType.APPLICATION_JSON)
         .build()
+
 }
 
 @Serializable

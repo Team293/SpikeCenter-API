@@ -1,12 +1,11 @@
 package center.spike.core.forms.persistence
 
-import center.spike.common.forms.FormType
+import center.spike.common.forms.ScoutingType
 import center.spike.common.forms.fields.FieldAnswer
 import center.spike.common.forms.fields.FieldDefinition
 import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntityBase
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
-import jakarta.persistence.Convert
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
@@ -35,7 +34,7 @@ class FormDefinition @OptIn(ExperimentalTime::class) constructor(
 
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
-    var type: FormType,
+    var type: ScoutingType,
 
     @Column(name = "version")
     var version: Int = 1,
@@ -88,7 +87,7 @@ class FormResponse @OptIn(ExperimentalTime::class) constructor(
 
     @Column(name = "response_type", nullable = false)
     @Enumerated(EnumType.STRING)
-    var responseType: FormType,
+    var responseType: ScoutingType,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "form_id", nullable = false)

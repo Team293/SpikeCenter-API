@@ -1,5 +1,17 @@
 quarkus:
+  otel:
+    enabled: true
+    exporter:
+      otlp:
+        endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+        traces:
+          endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}/v1/traces
+        protocol: http/protobuf
+    resource:
+      attributes: service.name=spike-center-backend
+
   oidc:
+    realm: master
     auth-server-url: https://identity.spike.center/realms/master
     client-id: spike-center-connect
     application-type: service
@@ -14,7 +26,6 @@ quarkus:
     cors: true
     cors-allowed-origins: "*"
     cors-allowed-methods: "*"
-    cors-allowed-headers: "*"
   devservices:
     enabled: false
   log:
@@ -37,3 +48,8 @@ quarkus:
     locations: db/migration
     schemas: public
     clean-disabled: false # turn on in prod
+    baseline-on-migrate: true
+
+tba:
+  api:
+    key: vH2P21mMVrkygXcQjKVn5i5CSP3fGYHhscFT1Ss57g1NwMkFh6mfabgciyV6ZSSq

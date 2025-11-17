@@ -10,7 +10,7 @@ import jakarta.transaction.Transactional
 @ApplicationScoped
 class SettingsService {
     @Inject
-    lateinit var settingsRepository: SettingsRepository
+    internal lateinit var settingsRepository: SettingsRepository
 
     @Transactional
     fun getEventCode(): String {

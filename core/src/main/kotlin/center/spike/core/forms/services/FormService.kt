@@ -11,7 +11,10 @@ import center.spike.common.forms.FormIdTransit
 import center.spike.common.forms.FormResponsesResponse
 import center.spike.common.forms.FormVersionResponse
 import center.spike.common.forms.GetFormByTypeRequest
+import center.spike.common.forms.GetFormResponsesWithEventCodeRequest
+import center.spike.common.forms.GetFormResponsesWithTeamNumberRequest
 import center.spike.common.forms.GetVersionRequest
+import center.spike.common.forms.SetVersionRequest
 import center.spike.common.forms.SubmitFormRequest
 import center.spike.common.toServiceResponse
 import center.spike.core.settings.services.SettingsService
@@ -30,19 +33,19 @@ import kotlin.time.ExperimentalTime
 @ApplicationScoped
 class FormService {
     @Inject
-    lateinit var formDefinitionRepository: FormDefinitionRepository
+    internal lateinit var formDefinitionRepository: FormDefinitionRepository
 
     @Inject
-    lateinit var formVersionRepository: FormVersionRepository
+    internal lateinit var formVersionRepository: FormVersionRepository
 
     @Inject
-    lateinit var fieldService: FieldService
+    internal lateinit var fieldService: FieldService
 
     @Inject
-    lateinit var formResponseRepository: FormResponseRepository
+    internal lateinit var formResponseRepository: FormResponseRepository
 
     @Inject
-    lateinit var settingsService: SettingsService
+    internal lateinit var settingsService: SettingsService
 
     @OptIn(ExperimentalTime::class)
     @Transactional
@@ -132,6 +135,73 @@ class FormService {
     }
 
     @Transactional
+    fun getCurrentVersion(request: FormIdTransit): ServiceResponse<FormVersionResponse> {
+        val definition = formVersionRepository.findById(request.formId)
+            ?: return ServiceResponse(
+                status = ResponseStatus.NOT_FOUND,
+                message = "Form definition not found",
+                data = null,
+                error = ServiceError(ErrorCode.NotFound, "Form definition with id ${request.formId} not found")
+            )
+
+        val version = formVersionRepository.findByFormIdAndVersion(request.formId, definition.version)
+            ?: return ServiceResponse(
+                status = ResponseStatus.NOT_FOUND,
+                message = "Form version not found",
+                data = null,
+                error = ServiceError(ErrorCode.NotFound, "Form version ${definition.version} for form id ${request.formId} not found")
+            )
+
+        val response = FormVersionResponse(
+            id = version.id!!,
+            formId = version.form.id!!,
+            version = version.version,
+            schema = version.schema
+        )
+
+        return ServiceResponse(ResponseStatus.SUCCESS, null, response)
+    }
+
+    @Transactional
+    fun setVersion(request: SetVersionRequest): ServiceResponse<FormVersionResponse> {
+        val definition = formDefinitionRepository.findById(request.formId)
+            ?: return ServiceResponse(
+                status = ResponseStatus.NOT_FOUND,
+                message = "Form definition not found",
+                data = null,
+                error = ServiceError(ErrorCode.NotFound, "Form definition with id ${request.formId} not found")
+            )
+
+        val version = formVersionRepository.findByFormIdAndVersion(request.formId, request.version)
+            ?: return ServiceResponse(
+                status = ResponseStatus.NOT_FOUND,
+                message = "Form version not found",
+                data = null,
+                error = ServiceError(ErrorCode.NotFound, "Form version ${request.version} for form id ${request.formId} not found")
+            )
+
+        definition.version = request.version
+
+        return SafeRunner.runOutcome(
+            errorCode = { ErrorCode.Database }
+        ) {
+            formDefinitionRepository.persist(definition)
+            definition
+        }.toServiceResponse(
+            onSuccess = {
+                val response = FormVersionResponse(
+                    id = version.id!!,
+                    formId = version.form.id!!,
+                    version = version.version,
+                    schema = version.schema
+                )
+                ServiceResponse(ResponseStatus.SUCCESS, "Form version set successfully", response)
+            },
+            onFailure = { err -> ServiceResponse(ResponseStatus.ERROR, "Failed to set form version", null, err) }
+        )
+    }
+
+    @Transactional
     fun getSpecificVersion(request: GetVersionRequest): ServiceResponse<FormVersionResponse> {
         val version = formVersionRepository.findByFormIdAndVersion(request.formId, request.version)
             ?: return ServiceResponse(
@@ -210,6 +280,7 @@ class FormService {
             responseType = definition.type,
             eventCode = settingsService.getEventCode(),
             formVersion = version,
+            matchCode = request.matchCode,
             data = request.fieldResponses
         )
 
@@ -245,6 +316,60 @@ class FormService {
     @Transactional
     fun getFormResponses(request: FormIdTransit): ServiceResponse<List<FormResponsesResponse>> {
         val responses = formResponseRepository.findByFormId(request.formId)
+        val response = responses.map { resp ->
+            FormResponsesResponse(
+                id = resp.id!!,
+                formId = resp.form.id!!,
+                teamNumber = resp.teamNumber,
+                responseType = resp.responseType,
+                eventCode = resp.eventCode,
+                matchCode = resp.matchCode,
+                fieldResponses = resp.data
+            )
+        }
+        return ServiceResponse(ResponseStatus.SUCCESS, null, response)
+    }
+
+    @Transactional
+    fun deleteForm(request: FormIdTransit): ServiceResponse<Unit> {
+        val definition = formDefinitionRepository.findById(request.formId)
+            ?: return ServiceResponse(
+                status = ResponseStatus.NOT_FOUND,
+                message = "Form definition not found",
+                data = null,
+                error = ServiceError(ErrorCode.NotFound, "Form definition with id ${request.formId} not found")
+            )
+
+        return SafeRunner.runOutcome(
+            errorCode = { ErrorCode.Database }
+        ) {
+            formDefinitionRepository.delete(definition)
+        }.toServiceResponse(
+            onSuccess = { ServiceResponse(ResponseStatus.SUCCESS, "Form deleted successfully", Unit) },
+            onFailure = { err -> ServiceResponse(ResponseStatus.ERROR, "Failed to delete form", null, err) }
+        )
+    }
+
+    @Transactional
+    fun getFormResponsesByEvent(request: GetFormResponsesWithEventCodeRequest): ServiceResponse<List<FormResponsesResponse>> {
+        val responses = formResponseRepository.findByFormIdAndEventCode(request.formId, request.eventCode)
+        val response = responses.map { resp ->
+            FormResponsesResponse(
+                id = resp.id!!,
+                formId = resp.form.id!!,
+                teamNumber = resp.teamNumber,
+                responseType = resp.responseType,
+                eventCode = resp.eventCode,
+                matchCode = resp.matchCode,
+                fieldResponses = resp.data
+            )
+        }
+        return ServiceResponse(ResponseStatus.SUCCESS, null, response)
+    }
+
+    @Transactional
+    fun getFormResponsesByTeam(request: GetFormResponsesWithTeamNumberRequest): ServiceResponse<List<FormResponsesResponse>> {
+        val responses = formResponseRepository.findByFormIdAndTeamNumber(request.formId, request.teamNumber)
         val response = responses.map { resp ->
             FormResponsesResponse(
                 id = resp.id!!,
